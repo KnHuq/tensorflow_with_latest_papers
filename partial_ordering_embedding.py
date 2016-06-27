@@ -14,10 +14,20 @@ class partial_ordering_embedding(object):
 		self.embedding_size = embedding_size
 
 	#TODO: nick, investigate max margin loss 
-	def max_margin_loss(self):
-		'''equation 3 in paper'''
+	def max_margin_loss(self, alpha = 1.0):
+		'''equation 3 in paper
 
-		1 = 1
+		(u, v) is a seen pair
+		where (u', v') is an unseen pair
+
+		Loss = E(f(u), f(v)) + max{0.0, alpha - E(f(u'), f(v'))}
+		'''
+		positive_loss_part = self.partial_order_error(u,v)
+		negative_loss_part = tf.maximum(0.0, alpha - self.partial_order_error(u_prime, v_prime))
+
+		loss = tf.reduce_sum(positive_loss_part + negative_loss_part)
+
+		return loss
 
 	def partial_order_error(self, x, y):
 		'''
@@ -38,7 +48,7 @@ class partial_ordering_embedding(object):
 		#no square op is here because in norm calculation we do NOT take sqrt
 		return tf.maximum(0, euclidean_norm(y-x)) 
 
-	
+
 
 
 
