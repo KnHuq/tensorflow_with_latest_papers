@@ -56,7 +56,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import time
+import time, os, sys
 
 import numpy as np
 import tensorflow as tf
@@ -69,7 +69,7 @@ logging = tf.logging
 flags.DEFINE_string(
     "model", "small",
     "A type of model. Possible options are: small, medium, large.")
-flags.DEFINE_string("data_path", None, "data_path")
+flags.DEFINE_string("data_path", os.path.expanduser('~') + '/ptb', "data_path")
 
 FLAGS = flags.FLAGS
 
@@ -138,6 +138,8 @@ class PTBModel(object):
     grads, _ = tf.clip_by_global_norm(tf.gradients(cost, tvars),
                                       config.max_grad_norm)
     optimizer = tf.train.GradientDescentOptimizer(self.lr)
+    optimizer = tf.train.AdamOptimizer(self.lr)
+
     self._train_op = optimizer.apply_gradients(zip(grads, tvars))
 
   def assign_lr(self, session, lr_value):
@@ -175,7 +177,7 @@ class PTBModel(object):
 class SmallConfig(object):
   """Small config."""
   init_scale = 0.1
-  learning_rate = 1.0
+  learning_rate = 0.0005
   max_grad_norm = 5
   num_layers = 2
   num_steps = 20
@@ -191,7 +193,7 @@ class SmallConfig(object):
 class MediumConfig(object):
   """Medium config."""
   init_scale = 0.05
-  learning_rate = 1.0
+  learning_rate = 0.0005
   max_grad_norm = 5
   num_layers = 2
   num_steps = 35
@@ -207,7 +209,7 @@ class MediumConfig(object):
 class LargeConfig(object):
   """Large config."""
   init_scale = 0.04
-  learning_rate = 1.0
+  learning_rate = 0.0005
   max_grad_norm = 10
   num_layers = 2
   num_steps = 35
@@ -223,7 +225,7 @@ class LargeConfig(object):
 class TestConfig(object):
   """Tiny config, for testing."""
   init_scale = 0.1
-  learning_rate = 1.0
+  learning_rate = 0.0005
   max_grad_norm = 1
   num_layers = 1
   num_steps = 2
