@@ -7,12 +7,10 @@ import math, numpy as np, itertools
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-
-
-import linear_enhanced as linear
-
+import linear_modern as linear
 from tensorflow.python.ops.nn import rnn_cell
-import highway_network
+import highway_network_modern
+
 
 RNNCell = rnn_cell.RNNCell
 

@@ -32,7 +32,7 @@ Allows multiple stacking of layers within one cell to increase depth per timeste
 ```python
 import rnn_cell_modern
 
-cell = rnn_cell_modern.HighwayRNN(num_units, num_layers)
+cell = rnn_cell_modern.HighwayRNNCell(num_units, num_highway_layers = 3)
 ```
 
 
@@ -43,15 +43,21 @@ https://arxiv.org/abs/1606.06630
 Allows faster convergence within RNNs by utilizing the combination of two separate weight matrices in a multiplicative setting
 
 ```python
+
 import rnn_cell_mulint_modern
 
-cell = rnn_cell_modern.HighwayRNN_MulInt(num_units, num_layers)
+cell = rnn_cell_mulint_modern.BasicRNNCell_MulInt(num_units)
 
 #OR
 
-cell = rnn_cell_modern.GRU_MulInt(num_units)
+cell = rnn_cell_mulint_modern.GRUCell_MulInt(num_units)
 
 #OR
 
-cell = rnn_cell_modern.BasicLSTM_MulInt(num_units)
+cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(num_units)
+
+#OR
+
+cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(num_units, num_highway_layers = 3)
+
 ```
