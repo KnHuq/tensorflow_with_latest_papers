@@ -7,6 +7,9 @@ Currently Implemented Papers:
 * Highway Networks
 * Recurrent Highway Networks
 * Multiplicative Integration Within RNNs
+* GRU Mutants
+
+More Papers to Come. If you have any requests, please use the issues section. 
 
 
 ### Highway Networks
@@ -47,17 +50,25 @@ Allows faster convergence within RNNs by utilizing the combination of two separa
 import rnn_cell_mulint_modern
 
 cell = rnn_cell_mulint_modern.BasicRNNCell_MulInt(num_units)
-
 #OR
-
 cell = rnn_cell_mulint_modern.GRUCell_MulInt(num_units)
-
 #OR
-
 cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(num_units)
-
 #OR
-
 cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(num_units, num_highway_layers = 3)
+```
 
+
+### GRU Mutants
+
+http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf
+
+Mutants of GRU that may work better in different scenarios:
+
+```python
+cell = rnn_cell_modern.JZS1Cell(num_units)
+#Or
+cell = rnn_cell_modern.JZS2Cell(num_units)
+#Or
+cell = rnn_cell_modern.JZS3Cell(num_units)
 ```

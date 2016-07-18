@@ -48,3 +48,152 @@ class HighwayRNNCell(RNNCell):
     return current_state, current_state
 
 
+class JZS1Cell(RNNCell):
+  """Mutant 1 of the following paper: http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf"""
+
+  def __init__(self, num_units, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1):
+    self._num_units = num_units
+    self._gpu_for_layer = gpu_for_layer 
+    self._weight_initializer = weight_initializer
+    self._orthogonal_scale_factor = orthogonal_scale_factor
+
+  @property
+  def input_size(self):
+    return self._num_units
+
+  @property
+  def output_size(self):
+    return self._num_units
+
+  @property
+  def state_size(self):
+    return self._num_units
+
+  def __call__(self, inputs, state, scope=None):
+    with tf.device("/gpu:"+str(self._gpu_for_layer)):
+      """JZS1, mutant 1 with n units cells."""
+      with tf.variable_scope(scope or type(self).__name__):  # "JZS1Cell"
+        with tf.variable_scope("Zinput"):  # Reset gate and update gate.
+          # We start with bias of 1.0 to not reset and not update.
+          '''equation 1 z = sigm(WxzXt+Bz), x_t is inputs'''
+
+          z = tf.sigmoid(lfe.enhanced_linear([inputs], 
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor)) 
+
+        with tf.variable_scope("Rinput"):
+          '''equation 2 r = sigm(WxrXt+Whrht+Br), h_t is the previous state'''
+
+          r = tf.sigmoid(lfe.enhanced_linear([inputs,state],
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
+          '''equation 3'''
+        with tf.variable_scope("Candidate"):
+          component_0 = linear.linear([r*state], 
+                            self._num_units, True) 
+          component_1 = tf.tanh(tf.tanh(inputs) + component_0)
+          component_2 = component_1*z
+          component_3 = state*(1 - z)
+
+        h_t = component_2 + component_3
+
+      return h_t, h_t #there is only one hidden state output to keep track of. 
+      #This makes it more mem efficient than LSTM
+
+
+class JZS2Cell(RNNCell):
+  """Mutant 2 of the following paper: http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf"""
+
+  def __init__(self, num_units, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1):
+    self._num_units = num_units
+    self._gpu_for_layer = gpu_for_layer 
+    self._weight_initializer = weight_initializer
+    self._orthogonal_scale_factor = orthogonal_scale_factor
+
+  @property
+  def input_size(self):
+    return self._num_units
+
+  @property
+  def output_size(self):
+    return self._num_units
+
+  @property
+  def state_size(self):
+    return self._num_units
+
+  def __call__(self, inputs, state, scope=None):
+    with tf.device("/gpu:"+str(self._gpu_for_layer)):
+      """JZS2, mutant 2 with n units cells."""
+      with tf.variable_scope(scope or type(self).__name__):  # "JZS1Cell"
+        with tf.variable_scope("Zinput"):  # Reset gate and update gate.
+          '''equation 1'''
+
+          z = tf.sigmoid(lfe.enhanced_linear([inputs, state], 
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
+
+          '''equation 2 '''
+        with tf.variable_scope("Rinput"):
+          r = tf.sigmoid(inputs+(lfe.enhanced_linear([state],
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor)))
+          '''equation 3'''
+
+        with tf.variable_scope("Candidate"):
+
+          component_0 = linear.linear([state*r,inputs],
+                            self._num_units, True)
+          
+          component_2 = (tf.tanh(component_0))*z
+          component_3 = state*(1 - z)
+
+        h_t = component_2 + component_3
+
+      return h_t, h_t #there is only one hidden state output to keep track of. 
+        #This makes it more mem efficient than LSTM
+
+class JZS3Cell(RNNCell):
+  """Mutant 3 of the following paper: http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf"""
+
+  def __init__(self, num_units, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1):
+    self._num_units = num_units
+    self._gpu_for_layer = gpu_for_layer 
+    self._weight_initializer = weight_initializer
+    self._orthogonal_scale_factor = orthogonal_scale_factor
+
+  @property
+  def input_size(self):
+    return self._num_units
+
+  @property
+  def output_size(self):
+    return self._num_units
+
+  @property
+  def state_size(self):
+    return self._num_units
+
+  def __call__(self, inputs, state, scope=None):
+    with tf.device("/gpu:"+str(self._gpu_for_layer)):
+      """JZS3, mutant 2 with n units cells."""
+      with tf.variable_scope(scope or type(self).__name__):  # "JZS1Cell"
+        with tf.variable_scope("Zinput"):  # Reset gate and update gate.
+          # We start with bias of 1.0 to not reset and not update.
+          '''equation 1'''
+
+          z = tf.sigmoid(lfe.enhanced_linear([inputs, tf.tanh(state)], 
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
+
+          '''equation 2'''
+        with tf.variable_scope("Rinput"):
+          r = tf.sigmoid(lfe.enhanced_linear([inputs, state],
+                            self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
+          '''equation 3'''
+        with tf.variable_scope("Candidate"):
+          component_0 = linear.linear([state*r,inputs],
+                            self._num_units, True)
+          
+          component_2 = (tf.tanh(component_0))*z
+          component_3 = state*(1 - z)
+
+        h_t = component_2 + component_3
+
+      return h_t, h_t #there is only one hidden state output to keep track of. 
+      #This makes it more mem efficient than LSTM
