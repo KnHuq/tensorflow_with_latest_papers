@@ -9,7 +9,9 @@ import tensorflow as tf
 # from multiplicative_integration import multiplicative_integration, multiplicative_integration_for_multiple_inputs
 
 from tensorflow.python.ops.nn import rnn_cell
-import highway_network
+import highway_network_modern
+from linear_modern import linear
+
 RNNCell = rnn_cell.RNNCell
 
 
@@ -37,13 +39,13 @@ class HighwayRNNCell(RNNCell):
     current_state = state
     for highway_layer in xrange(self.num_highway_layers):
       with tf.variable_scope('highway_factor_'+str(highway_layer)):
-        highway_factor = tf.tanh(tf.rnn_cell._linear([inputs, current_state], self._num_units, True))
+        highway_factor = tf.tanh(linear([inputs, current_state], self._num_units, True))
       with tf.variable_scope('gate_for_highway_factor_'+str(highway_layer)):
-        gate_for_highway_factor = tf.sigmoid(tf.rnn_cell._linear([inputs, current_state], self._num_units, True, -3.0))
+        gate_for_highway_factor = tf.sigmoid(linear([inputs, current_state], self._num_units, True, -3.0))
 
-        gate_for_hidden_factor_= 1 - gated_for_highway_factor
+        gate_for_hidden_factor = 1 - gate_for_highway_factor
 
-      current_state = highway_factor * gated_for_highway_factor + current_state * gated_for_hidden_factor
+      current_state = highway_factor * gate_for_highway_factor + current_state * gate_for_hidden_factor
 
     return current_state, current_state
 
@@ -77,17 +79,17 @@ class JZS1Cell(RNNCell):
           # We start with bias of 1.0 to not reset and not update.
           '''equation 1 z = sigm(WxzXt+Bz), x_t is inputs'''
 
-          z = tf.sigmoid(lfe.enhanced_linear([inputs], 
+          z = tf.sigmoid(linear([inputs], 
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor)) 
 
         with tf.variable_scope("Rinput"):
           '''equation 2 r = sigm(WxrXt+Whrht+Br), h_t is the previous state'''
 
-          r = tf.sigmoid(lfe.enhanced_linear([inputs,state],
+          r = tf.sigmoid(linear([inputs,state],
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
           '''equation 3'''
         with tf.variable_scope("Candidate"):
-          component_0 = linear.linear([r*state], 
+          component_0 = linear([r*state], 
                             self._num_units, True) 
           component_1 = tf.tanh(tf.tanh(inputs) + component_0)
           component_2 = component_1*z
@@ -127,18 +129,18 @@ class JZS2Cell(RNNCell):
         with tf.variable_scope("Zinput"):  # Reset gate and update gate.
           '''equation 1'''
 
-          z = tf.sigmoid(lfe.enhanced_linear([inputs, state], 
+          z = tf.sigmoid(linear([inputs, state], 
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
 
           '''equation 2 '''
         with tf.variable_scope("Rinput"):
-          r = tf.sigmoid(inputs+(lfe.enhanced_linear([state],
+          r = tf.sigmoid(inputs+(linear([state],
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor)))
           '''equation 3'''
 
         with tf.variable_scope("Candidate"):
 
-          component_0 = linear.linear([state*r,inputs],
+          component_0 = linear([state*r,inputs],
                             self._num_units, True)
           
           component_2 = (tf.tanh(component_0))*z
@@ -178,16 +180,16 @@ class JZS3Cell(RNNCell):
           # We start with bias of 1.0 to not reset and not update.
           '''equation 1'''
 
-          z = tf.sigmoid(lfe.enhanced_linear([inputs, tf.tanh(state)], 
+          z = tf.sigmoid(linear([inputs, tf.tanh(state)], 
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
 
           '''equation 2'''
         with tf.variable_scope("Rinput"):
-          r = tf.sigmoid(lfe.enhanced_linear([inputs, state],
+          r = tf.sigmoid(linear([inputs, state],
                             self._num_units, True, 1.0, weight_initializer = self._weight_initializer, orthogonal_scale_factor = self._orthogonal_scale_factor))
           '''equation 3'''
         with tf.variable_scope("Candidate"):
-          component_0 = linear.linear([state*r,inputs],
+          component_0 = linear([state*r,inputs],
                             self._num_units, True)
           
           component_2 = (tf.tanh(component_0))*z

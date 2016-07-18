@@ -62,6 +62,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.models.rnn.ptb import reader
+import rnn_cell_modern, rnn_cell_mulint_modern
 
 flags = tf.flags
 logging = tf.logging
@@ -86,11 +87,20 @@ class PTBModel(object):
     self._input_data = tf.placeholder(tf.int32, [batch_size, num_steps])
     self._targets = tf.placeholder(tf.int32, [batch_size, num_steps])
 
-    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(size, forget_bias=1.0)
+    # rnn_cell = tf.nn.rnn_cell.BasicLSTMCell(size, forget_bias=1.0)
+    # rnn_cell = rnn_cell_modern.HighwayRNNCell(size)
+    # rnn_cell = rnn_cell_modern.JZS1Cell(size)
+    # rnn_cell = rnn_cell_mulint_modern.BasicRNNCell_MulInt(size)
+    # rnn_cell = rnn_cell_mulint_modern.GRUCell_MulInt(size)
+    # rnn_cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(size)
+    rnn_cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(size)
+
+
+
     if is_training and config.keep_prob < 1:
-      lstm_cell = tf.nn.rnn_cell.DropoutWrapper(
-          lstm_cell, output_keep_prob=config.keep_prob)
-    cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell] * config.num_layers)
+      rnn_cell = tf.nn.rnn_cell.DropoutWrapper(
+          rnn_cell, output_keep_prob=config.keep_prob)
+    cell = tf.nn.rnn_cell.MultiRNNCell([rnn_cell] * config.num_layers)
 
     self._initial_state = cell.zero_state(batch_size, tf.float32)
 

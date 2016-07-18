@@ -8,6 +8,7 @@ import tensorflow as tf
 from multiplicative_integration_modern import multiplicative_integration
 from tensorflow.python.ops.nn import rnn_cell
 import highway_network_modern
+from linear_modern import linear
 
 RNNCell = rnn_cell.RNNCell
 
@@ -77,7 +78,7 @@ class GRUCell_MulInt(RNNCell):
 
       new_h = u * state + (1 - u) * c
 
-    return output, new_h
+    return new_h, new_h
 
           
 class BasicLSTMCell_MulInt(RNNCell):
@@ -157,12 +158,12 @@ class HighwayRNNCell_MulInt(RNNCell):
     current_state = state
     for highway_layer in xrange(self.num_highway_layers):
       with tf.variable_scope('highway_factor_'+str(highway_layer)):
-        highway_factor = tf.tanh(multiplicative_integration[inputs, current_state], self._num_units))
+        highway_factor = tf.tanh(multiplicative_integration([inputs, current_state], self._num_units))
       with tf.variable_scope('gate_for_highway_factor_'+str(highway_layer)):
         gate_for_highway_factor = tf.sigmoid(multiplicative_integration([inputs, current_state], self._num_units, initial_bias_value = -3.0))
 
-        gate_for_hidden_factor_= 1 - gated_for_highway_factor
+        gate_for_hidden_factor = 1 - gate_for_highway_factor
 
-      current_state = highway_factor * gated_for_highway_factor + current_state * gated_for_hidden_factor
+      current_state = highway_factor * gate_for_highway_factor + current_state * gate_for_hidden_factor
 
     return current_state, current_state
